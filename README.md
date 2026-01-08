@@ -67,18 +67,100 @@ pip install -r requirements.txt
 
 ## 使用方法
 
-### 启动应用
+### 本地运行
+
+#### 启动应用
 
 ```bash
 python app.py
 ```
 
-### 访问应用
+#### 访问应用
 
 1. 启动后，在终端会显示本地访问地址（默认为 `http://127.0.0.1:7860`）
 2. 打开浏览器访问该地址
 3. 允许浏览器访问摄像头权限
 4. 开始实时检测！
+
+### 部署到 Hugging Face Spaces
+
+本项目已经配置好，可以直接部署到 Hugging Face Spaces。以下是详细步骤：
+
+#### 方法一：通过 Web 界面创建（推荐）
+
+1. **登录 Hugging Face**
+   - 访问 [Hugging Face](https://huggingface.co/)
+   - 注册/登录账号
+
+2. **创建新的 Space**
+   - 点击右上角头像，选择 "New Space"
+   - 填写 Space 信息：
+     - **Space name**: 输入你的 Space 名称（如 `yolo-realtime-detection`）
+     - **SDK**: 选择 **Gradio**
+     - **Hardware**: 选择 **CPU basic**（免费）或 **CPU upgrade**（如果需要更快速度）
+     - **Visibility**: 选择 **Public**（公开）或 **Private**（私有）
+   - 点击 "Create Space"
+
+3. **上传代码文件**
+   - 在 Space 页面，点击 "Files and versions" 标签
+   - 点击 "Add file" → "Upload file"
+   - 依次上传以下文件：
+     - `app.py`
+     - `requirements.txt`
+     - `README.md`
+   - 或者使用 Git 上传（见方法二）
+
+4. **等待构建完成**
+   - Hugging Face 会自动检测代码并开始构建
+   - 构建过程可能需要 2-5 分钟
+   - 可以在 "Logs" 标签查看构建进度
+
+5. **访问你的 Space**
+   - 构建完成后，在 Space 页面即可访问应用
+   - URL 格式：`https://huggingface.co/spaces/<your-username>/<your-space-name>`
+
+#### 方法二：通过 Git 上传
+
+1. **安装 Git 和 Hugging Face CLI**
+   ```bash
+   pip install huggingface_hub
+   ```
+
+2. **登录 Hugging Face**
+   ```bash
+   huggingface-cli login
+   ```
+   输入你的 Hugging Face token（在 [Settings → Access Tokens](https://huggingface.co/settings/tokens) 创建）
+
+3. **初始化 Git 仓库（如果还没有）**
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit"
+   ```
+
+4. **连接到 Hugging Face Space**
+   ```bash
+   # 首先在 Hugging Face 网页创建 Space（方法一的前两步）
+   # 然后执行以下命令：
+   git remote add origin https://huggingface.co/spaces/<your-username>/<your-space-name>
+   git push origin main
+   ```
+
+#### Hugging Face Spaces 部署注意事项
+
+- ✅ **模型文件**：`yolov8n.pt` 会在首次运行时自动下载，无需手动上传
+- ✅ **环境适配**：`app.py` 已自动检测 Hugging Face Spaces 环境并调整配置
+- ⚠️ **摄像头权限**：在 Hugging Face Spaces 中需要用户授权浏览器摄像头权限
+- ⚠️ **硬件资源**：免费 CPU 资源有限，检测速度可能较慢；可以考虑升级到 CPU upgrade 或使用 GPU
+- 📝 **README.md**：建议保留，Hugging Face Spaces 会显示为 Space 的说明文档
+
+#### Space 配置说明
+
+项目已包含以下 Hugging Face Spaces 兼容配置：
+- `app.py`: 自动检测 `SPACE_ID` 环境变量，在 Spaces 环境下使用默认启动配置
+- `requirements.txt`: 包含所有必需的依赖包
+- 代码支持本地和 Spaces 环境双重运行
 
 ### 使用说明
 
@@ -95,6 +177,8 @@ python app.py
 yolo_gradio_mini_project_test/
 ├── app.py              # 主应用文件
 ├── requirements.txt    # 项目依赖
+├── LICENSE            # MIT 许可证
+├── .gitignore         # Git 忽略文件配置
 ├── yolov8n.pt         # YOLOv8 模型文件（首次运行自动下载）
 └── README.md          # 项目说明文档
 ```
@@ -137,7 +221,13 @@ A: 可以尝试：
 3. 检查 CPU/GPU 性能
 
 ### Q: 统计图表不显示中文？
-A: 程序已配置中文字体，如果仍无法显示，请确保系统已安装中文字体（如 SimHei、Microsoft YaHei）
+A: 程序已自动检测和配置中文字体。如果仍无法显示：
+1. **本地运行**：确保系统已安装中文字体（Windows/macOS 通常已预装）
+2. **Hugging Face Spaces**：
+   - 程序会自动检测系统字体
+   - 如果找不到中文字体，会自动切换到英文标签
+   - 如需中文显示，可以在 Space 的 README 中添加字体安装说明
+   - 或者使用支持中文字体的基础镜像
 
 ### Q: 如何修改检测置信度？
 A: 在 `app.py` 的第 42 行修改 `conf=0.4` 参数，范围 0-1，数值越高要求越严格
@@ -150,7 +240,21 @@ A: 在 `app.py` 的第 42 行修改 `conf=0.4` 参数，范围 0-1，数值越�
 
 ## 许可证
 
-本项目仅供学习和研究使用。
+本项目采用 [MIT License](LICENSE) 许可证。
+
+### 许可证说明
+
+- **项目代码**：MIT License - 允许自由使用、修改、分发，包括商业用途
+- **YOLO 模型**：本项目使用的 YOLOv8 模型来自 Ultralytics，请参考 [Ultralytics 许可证条款](https://github.com/ultralytics/ultralytics) 了解模型使用限制
+- **依赖库**：各依赖库遵循各自的许可证（请参考各库的许可证文件）
+
+### 使用建议
+
+- ✅ 可以用于学习和研究
+- ✅ 可以修改和分发代码
+- ✅ 可以用于商业项目
+- ⚠️ 使用 YOLO 模型时请遵守 Ultralytics 的许可证条款
+- ⚠️ 请保留原始版权声明
 
 ## 贡献
 
